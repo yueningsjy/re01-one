@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mnaxx的Coffee</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#A6D1E6', // 主色调：浅蓝色（夜空）
+                        secondary: '#9D84B7', // 次要色调：紫罗兰色
+                        accent: '#FFD966', // 强调色：月光黄
+                        dark: '#0F172A', // 深色背景（夜空）
+                        light: '#F8FAFC', // 浅色文本
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+            .star-glow {
+                box-shadow: 0 0 15px rgba(255, 217, 102, 0.5);
+            }
+        }
+    </style>
+    
+    <style>
+        /* 基础动画设置 */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* 淡入动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease forwards;
+        }
+        
+        /* 延迟动画 */
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
+        
+        /* 隐藏初始状态 */
+        .hidden-initially {
+            opacity: 0;
+        }
+        
+        /* 书籍卡片悬停效果 */
+        .book-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 电影卡片悬停效果 */
+        .movie-card {
+            transition: all 0.3s ease;
+        }
+        
+        .movie-card:hover {
+            transform: scale(1.03);
+        }
+        
+        /* 装饰元素动画 */
+        .floating {
+            animation: floating 6s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        /* 星空背景 */
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            from { opacity: 0.3; }
+            to { opacity: 1; }
+        }
+        
+        /* 流星动画 */
+        .meteor {
+            position: absolute;
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, transparent, white);
+            animation: meteor 1s linear;
+            z-index: 1;
+        }
+        
+        @keyframes meteor {
+            from { transform: translateY(-100px) rotate(30deg); }
+            to { transform: translateY(100vh) rotate(30deg); }
+        }
+    </style>
+</head>
+
+<body class="bg-dark text-light font-sans overflow-x-hidden">
+    <!-- 星空背景 -->
+    <div class="stars fixed top-0 left-0"></div>
+
+    <!-- 导航栏 -->
+    <header id="navbar" class="fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-dark/70 backdrop-blur-md">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="#hero" class="text-2xl font-bold text-primary flex items-center gap-2">
+                <i class="fa fa-moon-o" aria-hidden="true"></i>
+                <span>月柠的晚间频道</span>
+            </a>
+            
+            <!-- 桌面端菜单 -->
+            <ul class="hidden md:flex space-x-8">
+                <li><a href="#books" class="hover:text-primary transition-colors duration-300 font-medium">读书分享</a></li>
+                <li><a href="#movies" class="hover:text-primary transition-colors duration-300 font-medium">最爱电影</a></li>
+                <li><a href="#thoughts" class="hover:text-primary transition-colors duration-300 font-medium">晚间碎碎念</a></li>
+            </ul>
+            
+            <!-- 移动端菜单按钮 -->
+            <button id="menu-toggle" class="md:hidden text-xl text-primary">
+                <i class="fa fa-bars" aria-hidden="true"></i>
+            </button>
+        </nav>
+        
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="hidden md:hidden bg-dark/95 backdrop-blur-md shadow-lg">
+            <ul class="container mx-auto px-4 py-4 flex flex-col space-y-4">
+                <li><a href="#books" class="block py-2 hover:text-primary transition-colors duration-300">读书分享</a></li>
+                <li><a href="#movies" class="block py-2 hover:text-primary transition-colors duration-300">最爱电影</a></li>
+                <li><a href="#thoughts" class="block py-2 hover:text-primary transition-colors duration-300">晚间碎碎念</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- 英雄区域 -->
+    <section id="hero" class="min-h-screen flex flex-col items-center justify-center relative pt-16 px-4">
+        <!-- 卡通人物1 -->
+        <div class="absolute top-20 left-5 md:left-10 w-24 md:w-32 floating hidden md:block z-10">
+            <img src="c:\Users\HUAWEI\Documents\Tencent Files\2577366528\nt_qq\nt_data\Pic\2025-10\Thumb\ab04cacd44563ef88d46465a8ba49ba0_720.png" alt="卡通人物" class="w-full h-auto rounded-full border-4 border-dark shadow-lg star-glow">
+        </div>
+        
+        <!-- 卡通人物2 -->
+        <div class="absolute bottom-40 right-5 md:right-10 w-20 md:w-28 floating delay-300 hidden md:block z-10">
+            <img src="c:\Users\HUAWEI\Documents\Tencent Files\2577366528\nt_qq\nt_data\Pic\2025-10\Ori\c5d1fbb59dbae8fee323332e81a52806.png" alt="卡通人物" class="w-full h-auto rounded-full border-4 border-dark shadow-lg star-glow">
+            
+        </div>
+        
+        <div class="container mx-auto text-center z-20">
+            <h1 class="text-[clamp(2.5rem,8vw,5rem)] font-bold mb-6 text-shadow hidden-initially fade-in">
+                月柠的晚间频道
+            </h1>
+            <p class="text-[clamp(1rem,3vw,1.25rem)] max-w-2xl mx-auto mb-10 text-light/70 hidden-initially fade-in delay-200">
+                在这里，分享那些我钟爱的事物、有趣的发现，以及偶尔闪现的奇思妙想
+            </p>
+            <div class="hidden-initially fade-in delay-400">
+                <a href="#books" class="px-8 py-3 bg-primary text-dark font-semibold rounded-full hover:bg-primary/90 transition-all duration-300 transform hover:-translate-y-1 inline-flex items-center gap-2 shadow-md">
+                    开始探索 <i class="fa fa-arrow-down" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 滚动指示器 -->
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce hidden-initially fade-in delay-500 z-20">
+            <i class="fa fa-angle-double-down text-3xl text-primary" aria-hidden="true"></i>
+        </div>
+    </section>
+
+    <!-- 读书分享区域 -->
+    <section id="books" class="py-20 relative">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16 hidden-initially">
+                <h2 class="text-[clamp(1.8rem,5vw,3rem)] font-bold mb-4 text-shadow inline-block relative">
+                    读书分享
+                    <span class="absolute -bottom-2 left-0 w-full h-2 bg-primary/30"></span>
+                </h2>
+                <p class="max-w-2xl mx-auto text-light/70 mt-6">在文字的世界里，收集那些打动人心的瞬间</p>
+            </div>
+            
+            <!-- 书籍1 -->
+            <div class="max-w-4xl mx-auto mb-16 bg-dark/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-primary/20 p-6 md:p-8 flex flex-col md:flex-row gap-8 book-card hidden-initially">
+                <div class="md:w-1/3 flex justify-center">
+                    <img src="c:\Users\HUAWEI\Documents\Tencent Files\2577366528\nt_qq\nt_data\Pic\2025-10\Ori\cec9f8ef411c220bff3e2c0b82f35c85.png" alt="《你当像鸟飞往你的山》书籍封面" class="w-48 h-auto rounded shadow-lg border border-light/10">
+                </div>
+                <div class="md:w-2/3 flex flex-col">
+                    <h3 class="text-2xl font-bold mb-2 text-primary">你当像鸟飞往你的山</h3>
+                    <p class="text-light/60 mb-4">作者: 塔拉·韦斯特弗</p>
+                    <p class="text-light/80 mb-6 flex-grow">
+                        这是一本令人震撼的回忆录，讲述了一个在大山中长大的女孩，通过教育挣脱原生家庭的束缚，重塑自我的故事。塔拉的经历告诉我们，你可以用自己的双脚站起来，去看看更广阔的世界。
+                    </p>
+                    
+                    <div class="bg-dark/30 border border-primary/20 rounded-xl p-4">
+                        <h4 class="font-bold text-primary mb-2 flex items-center gap-2">
+                            <i class="fa fa-quote-left" aria-hidden="true"></i>
+                            我的书摘
+                        </h4>
+                        <p class="text-light/70 italic min-h-[80px] placeholder:text-light/30">
+                            “春天，当针叶树从雪里露出头来，深绿色的针叶在黄褐色的泥土和树皮的映衬下，显得几乎呈黑色时，印第安公主最为清晰可见。现在是秋天。虽然还能看见她的身影，但她正在消隐：垂死的夏天的红黄色遮掩了她黝黑的身影。很快就要下雪了。山谷里的第一场雪会融化，但山上的雪会存留，将公主掩埋，直到来年春天，她才会充满警惕地再次出现。</p>
+                            “回答之前，我思考了片刻。“我能在风中站稳，是因为我不是努力尝试站在风中，”我说，“风就是风。人能受得了地面上的阵阵狂风，所以也能禁得住高空的风。它们没有区别。不同的是头脑中怎么想。”</p>
+                            “机会渺茫，但我是擅长抓住机会的女王。”</p>
+                            “决定你是谁的最强大因素来自你的内心。”</p>
+                            “过去是一个幽灵，虚无缥缈，没什么影响力。只有未来才有分量。”</p>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 书籍2 -->
+            <div class="max-w-4xl mx-auto mb-16 bg-dark/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-primary/20 p-6 md:p-8 flex flex-col md:flex-row gap-8 book-card hidden-initially">
+                <div class="md:w-1/3 flex justify-center">
+                    <img src="c:\Users\HUAWEI\Documents\Tencent Files\2577366528\nt_qq\nt_data\Pic\2025-10\Thumb\97bb419dd2ebc33470a3293b4a1c0719_720.png" alt="《微物之神》书籍封面" class="w-48 h-auto rounded shadow-lg border border-light/10">
+                </div>
+                <div class="md:w-2/3 flex flex-col">
+                    <h3 class="text-2xl font-bold mb-2 text-primary">微物之神</h3>
+                    <p class="text-light/60 mb-4">作者: Arundhati Roy</p>
+                    <p class="text-light/80 mb-6 flex-grow">
+                        一部充满诗意与悲伤的小说，以印度喀拉拉邦为背景，探讨了爱、种姓制度和家庭关系。罗伊的文字像细密的织锦，将跨越时空的故事编织在一起，让人沉浸其中。
+                    </p>
+                    
+                    <div class="bg-dark/30 border border-primary/20 rounded-xl p-4">
+                        <h4 class="font-bold text-primary mb-2 flex items-center gap-2">
+                            <i class="fa fa-quote-left" aria-hidden="true"></i>
+                            我的书摘
+                        </h4>
+                        <p class="text-light/70 italic min-h-[80px] placeholder:text-light/30">
+                            （在这里记录你喜欢的段落和感悟...）
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 书籍3 -->
+            <div class="max-w-4xl mx-auto mb-16 bg-dark/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-primary/20 p-6 md:p-8 flex flex-col md:flex-row gap-8 book-card hidden-initially">
+                <div class="md:w-1/3 flex justify-center">
+                    <img src="c:\Users\HUAWEI\Documents\Tencent Files\2577366528\nt_qq\nt_data\Pic\2025-10\Thumb\5f9faed252f67a912f42b4aee8af6fee_720.png" alt="《午夜图书馆》书籍封面" class="w-48 h-auto rounded shadow-lg border border-light/10">
+                </div>
+                <div class="md:w-2/3 flex flex-col">
+                    <h3 class="text-2xl font-bold mb-2 text-primary">午夜图书馆</h3>
+                    <p class="text-light/60 mb-4">作者: 马特·海格</p>
+                    <p class="text-light/80 mb-6 flex-grow">
+                        一个关于遗憾、可能性和重新选择的故事。在生与死的边界，有一座图书馆存放着所有未被选择的人生。这本书教会我们珍惜当下，勇敢地去创造自己想要的生活。
+                    </p>
+                    
+                    <div class="bg-dark/30 border border-primary/20 rounded-xl p-4">
+                        <h4 class="font-bold text-primary mb-2 flex items-center gap-2">
+                            <i class="fa fa-quote-left" aria-hidden="true"></i>
+                            我的书摘
+                        </h4>
+                        <p class="text-light/70 italic min-h-[80px] placeholder:text-light/30">
+                            “人生除了死亡，都是擦伤。擦伤要擦药。”</p>
+                            “人生有时很有趣，你只要多等一会，人生便会给你全新的观点。”</p>
+                            “享受一段人生不代表你就必须留在那段人生中。除非你无法想像更好的人生，你才会留下来，但矛盾的是，你试过愈多人生，你愈能想到更好的人生，因为每次你体验过新的人生之后，你的想像力就变得更开阔。
+”
+
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 书籍4 -->
+            <div class="max-w-4xl mx-auto bg-dark/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-primary/20 p-6 md:p-8 flex flex-col md:flex-row gap-8 book-card hidden-initially">
+                <div class="md:w-1/3 flex justify-center">
+                    <img src="c:\Users\HUAWEI\Documents\Tencent Files\2577366528\nt_qq\nt_data\Pic\2025-10\Thumb\bc37b4ff224d619753d56c7b5d728297_720.png" alt="《飘》书籍封面" class="w-48 h-auto rounded shadow-lg border border-light/10">
+                </div>
+                <div class="md:w-2/3 flex flex-col">
+                    <h3 class="text-2xl font-bold mb-2 text-primary">飘</h3>
+                    <p class="text-light/60 mb-4">作者: 玛格丽特·米切尔</p>
+                    <p class="text-light/80 mb-6 flex-grow">
+                        一部经久不衰的经典，以美国南北战争为背景，讲述了斯嘉丽·奥哈拉的爱情与成长。她的坚韧、任性与蜕变，让我们看到了一个女性在乱世中如何为生存而战。
+                    </p>
+                    
+                    <p class="bg-dark/30 border border-primary/20 rounded-xl p-4">
+                        <h4 class="font-bold text-primary mb-2 flex items-center gap-2">
+                            <i class="fa fa-quote-left" aria-hidden="true"></i>
+                            我的书摘
+                        </h4>
+                        <p class="text-light/70 italic min-h-[80px] placeholder:text-light/30">
+                            “夕阳血红的余晖将佐治亚新翻的畦畦红壤点染得更加辉煌。湿润饥饿的土地仰望长空，期盼着播种。条条田垄沙质的顶部粉红一片，而犁沟两侧的阴影处却呈现出朱红、猩红与褐红的颜色。粉白的种植园砖屋宛若红色海洋中的小岛，那海波涛起伏，浪花滚滚，却在波峰裂作碎浪的瞬间忽而凝住”</p>
+                            “但每逢遇到讨厌棘手的事，她内心深处就会闪出一个念头，给她力量：“人都杀过，这有何难。”</p>
+                            “回回凭窗眺望绿色的牧场，红色的田庄，密密匝匝高耸入云的沼泽森林，她心中便觉得无限美好。其他一切都在变，但斯佳丽的身上唯一不变的是她对这片土地的热爱。她爱这绵延不绝的丘陵山冈，爱这色彩变幻的红土地——血红、石榴红、砖红、朱砂红，而且奇迹般地长出绿色的棉株，开出洁白松软的朵朵棉花。”</p>
+                            “说到底，明天总是个新日子。”
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 电影分享区域 -->
+    <section id="movies" class="py-20 bg-gradient-to-b from-dark to-dark/95 relative">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16 hidden-initially">
+                <h2 class="text-[clamp(1.8rem,5vw,3rem)] font-bold mb-4 text-shadow inline-block relative">
+                    最爱电影分享
+                    <span class="absolute -bottom-2 left-0 w-full h-2 bg-secondary/30"></span>
+                </h2>
+                <p class="max-w-2xl mx-auto text-light/70 mt-6">那些在屏幕上闪烁的光影，总有一些会留在心底</p>
+            </div>
+            
+            <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- 电影1 -->
+                <div class="movie-card bg-dark/50 backdrop-blur-sm rounded-xl overflow-hidden border border-secondary/20 shadow-md hidden-initially">
+                    <img src="https://0img.hitv.com/preview/sp_images/2025/09/30/202509301704416506996.jpg" alt="《长安的荔枝》电影海报" class="w-full h-64 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2 text-light">长安的荔枝</h3>
+                        <p class="text-sm text-light/60 mb-3">历史 / 剧情</p>
+                        <p class="text-light/80 text-sm">
+                            好吧这个其实是最近看的，但也很好看哇</p>
+                            改编自马伯庸的同名小说，讲述了唐朝官员李善德为杨贵妃从岭南运送新鲜荔枝的故事，展现了小人物在宏大历史背景下的挣扎与坚持。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 电影2 -->
+                <div class="movie-card bg-dark/50 backdrop-blur-sm rounded-xl overflow-hidden border border-secondary/20 shadow-md hidden-initially">
+                    <img src="https://eximg.hitv.com/u/o/archievideo/qq/collects/da477639873028c862a15fc59dc121ec.jpg" alt="《白日梦想家》电影海报" class="w-full h-64 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2 text-light">白日梦想家</h3>
+                        <p class="text-sm text-light/60 mb-3">冒险 / 剧情</p>
+                        <p class="text-light/80 text-sm">
+                            一个爱做白日梦的男人，为了寻找一张丢失的底片，踏上了一段真实的冒险之旅，最终发现了生活的真谛和勇气。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 电影3 -->
+                <div class="movie-card bg-dark/50 backdrop-blur-sm rounded-xl overflow-hidden border border-secondary/20 shadow-md hidden-initially">
+                    <img src="https://eximg.hitv.com/u/o/archievideo/qq/collects/42b3076a98705ea9dca1a5dd815ff7ee.jpg" alt="《楚门的世界》电影海报" class="w-full h-64 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2 text-light">楚门的世界</h3>
+                        <p class="text-sm text-light/60 mb-3">剧情 / 奇幻</p>
+                        <p class="text-light/80 text-sm">
+                            楚门生活在一个看似完美的世界里，却逐渐发现自己其实是一档热门肥皂剧的主角，他的整个生活都被直播给全世界。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 晚间碎碎念区域 -->
+    <section id="thoughts" class="py-20 relative">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16 hidden-initially">
+                <h2 class="text-[clamp(1.8rem,5vw,3rem)] font-bold mb-4 text-shadow inline-block relative">
+                    晚间碎碎念
+                    <span class="absolute -bottom-2 left-0 w-full h-2 bg-accent/30"></span>
+                </h2>
+                <p class="max-w-2xl mx-auto text-light/70 mt-6">深夜的思绪，像散落的星光，闪烁着细碎的光芒</p>
+            </div>
+            
+            <div class="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 碎碎念1 -->
+                <div class="bg-dark/50 backdrop-blur-sm rounded-xl p-5 border border-accent/20 hover:border-accent/40 transition-colors duration-300 hidden-initially">
+                    <div class="flex items-center mb-3">
+                        <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center mr-3">
+                            <i class="fa fa-moon-o text-accent text-sm" aria-hidden="true"></i>
+                        </div>
+                        <span class="text-xs text-light/50">9.10</span>
+                    </div>
+                    <div class="min-h-[120px] text-light/80 text-sm">
+                        最后，我想我还是最喜欢斯佳丽，她无论在怎样的情况下都能干出一条自己的路，亦如她的爱尔兰祖先们—“说到底，明天总是个新日子”。我也很喜欢梅拉妮，她庄重瘦小却有着巨大的力量。还有什么呢我想是它告诉我，感情是要立刻表达出来的；人不可能什么都有，也不可能一无所有.(熬大夜又上了3节晚课后的读后碎碎念)
+                    </div>
+                </div>
+                
+                <!-- 碎碎念2 -->
+                <div class="bg-dark/50 backdrop-blur-sm rounded-xl p-5 border border-accent/20 hover:border-accent/40 transition-colors duration-300 hidden-initially">
+                    <div class="flex items-center mb-3">
+                        <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center mr-3">
+                            <i class="fa fa-moon-o text-accent text-sm" aria-hidden="true"></i>
+                        </div>
+                        <span class="text-xs text-light/50">9.25</span>
+                    </div>
+                    <div class="min-h-[120px] text-light/80 text-sm">
+                        第一次正式地读印度文学，它是果味的，黏腻的，也是让我夜不能寐的，深感震撼的，美与恶都缓慢渗透！
+                    </div>
+                </div>
+                
+                <!-- 碎碎念3 -->
+                <div class="bg-dark/50 backdrop-blur-sm rounded-xl p-5 border border-accent/20 hover:border-accent/40 transition-colors duration-300 hidden-initially">
+                    <div class="flex items-center mb-3">
+                        <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center mr-3">
+                            <i class="fa fa-moon-o text-accent text-sm" aria-hidden="true"></i>
+                        </div>
+                        <span class="text-xs text-light/50">9.28</span>
+                    </div>
+                    <div class="min-h-[120px] text-light/80 text-sm">
+                        感觉一旦吃完晚饭，我的脑子就不转了，写代码就是‍‍‍晕晕晕，所以我选择打球作为我的解药哇
+                    </div>
+                </div>
+                
+                <!-- 碎碎念4 -->
+                <div class="bg-dark/50 backdrop-blur-sm rounded-xl p-5 border border-accent/20 hover:border-accent/40 transition-colors duration-300 hidden-initially">
+                    <div class="flex items-center mb-3">
+                        <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center mr-3">
+                            <i class="fa fa-moon-o text-accent text-sm" aria-hidden="true"></i>
+                        </div>
+                        <span class="text-xs text-light/50">添加日期</span>
+                    </div>
+                    <div class="min-h-[120px] text-light/80 text-sm">
+                        <!-- 空白区域，供用户填写内容 -->
+                    </div>
+                </div>
+                
+                <!-- 碎碎念5 -->
+                <div class="bg-dark/50 backdrop-blur-sm rounded-xl p-5 border border-accent/20 hover:border-accent/40 transition-colors duration-300 hidden-initially">
+                    <div class="flex items-center mb-3">
+                        <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center mr-3">
+                            <i class="fa fa-moon-o text-accent text-sm" aria-hidden="true"></i>
+                        </div>
+                        <span class="text-xs text-light/50">添加日期</span>
+                    </div>
+                    <div class="min-h-[120px] text-light/80 text-sm">
+                        <!-- 空白区域，供用户填写内容 -->
+                    </div>
+                </div>
+                
+                <!-- 碎碎念6 -->
+                <div class="bg-dark/50 backdrop-blur-sm rounded-xl p-5 border border-accent/20 hover:border-accent/40 transition-colors duration-300 hidden-initially">
+                    <div class="flex items-center mb-3">
+                        <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center mr-3">
+                            <i class="fa fa-moon-o text-accent text-sm" aria-hidden="true"></i>
+                        </div>
+                        <span class="text-xs text-light/50">添加日期</span>
+                    </div>
+                    <div class="min-h-[120px] text-light/80 text-sm">
+                        <!-- 空白区域，供用户填写内容 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="py-10 bg-dark/80 backdrop-blur-md border-t border-primary/10">
+        <div class="container mx-auto px-4 text-center">
+            <div class="text-primary text-2xl mb-4">
+                <i class="fa fa-moon-o" aria-hidden="true"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">月柠的晚间频道</h3>
+            <p class="text-light/50 text-sm mb-6">在安静的夜晚，与自己相遇</p>
+            <div class="flex justify-center space-x-6 mb-8">
+                <a href="#" class="text-light/50 hover:text-primary transition-colors duration-300">
+                    <i class="fa fa-weibo" aria-hidden="true"></i>
+                </a>
+                <a href="#" class="text-light/50 hover:text-primary transition-colors duration-300">
+                    <i class="fa fa-wechat" aria-hidden="true"></i>
+                </a>
+                <a href="#" class="text-light/50 hover:text-primary transition-colors duration-300">
+                    <i class="fa fa-instagram" aria-hidden="true"></i>
+                </a>
+            </div>
+            <p class="text-light/30 text-xs">&copy; 2025 月柠的晚间频道. 保留所有权利.</p>
+        </div>
+    </footer>
+
+    <script>
+        // 生成星空背景
+        function createStars() {
+            const starsContainer = document.querySelector('.stars');
+            const starCount = 200;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                // 随机位置
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                
+                // 随机大小
+                const size = Math.random() * 2 + 1;
+                
+                // 随机动画延迟
+                const delay = Math.random() * 5;
+                
+                // 随机亮度
+                const opacity = Math.random() * 0.7 + 0.3;
+                
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.animationDelay = `${delay}s`;
+                star.style.opacity = opacity;
+                
+                // 偶尔的亮星
+                if (size > 1.5 && opacity > 0.8) {
+                    star.style.backgroundColor = '#FFD966';
+                }
+                
+                starsContainer.appendChild(star);
+            }
+            
+            // 随机生成流星
+            function createMeteor() {
+                const meteor = document.createElement('div');
+                meteor.classList.add('meteor');
+                
+                const x = Math.random() * 100;
+                const delay = Math.random() * 15 + 5; // 每5-20秒出现一次
+                
+                meteor.style.left = `${x}%`;
+                meteor.style.top = '0';
+                meteor.style.animationDelay = `${delay}s`;
+                
+                document.body.appendChild(meteor);
+                
+                // 动画结束后移除流星元素
+                setTimeout(() => {
+                    meteor.remove();
+                }, 1000);
+                
+                // 递归调用，持续生成流星
+                setTimeout(createMeteor, delay * 1000);
+            }
+            
+            // 开始生成流星
+            createMeteor();
+        }
+        
+        // 导航栏滚动效果
+        function handleNavbarScroll() {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('shadow-md');
+                navbar.classList.remove('shadow-sm');
+            } else {
+                navbar.classList.remove('shadow-md');
+                navbar.classList.add('shadow-sm');
+            }
+        }
+        
+        // 移动端菜单切换
+        function setupMobileMenu() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            menuToggle.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                // 切换图标
+                const icon = menuToggle.querySelector('i');
+                if (icon.classList.contains('fa-bars')) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                } else {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            });
+            
+            // 点击菜单项后关闭菜单
+            const menuItems = mobileMenu.querySelectorAll('a');
+            menuItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                    const icon = menuToggle.querySelector('i');
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                });
+            });
+        }
+        
+        // 滚动动画
+        function setupScrollAnimations() {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+            
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('fade-in');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+            
+            // 监听所有需要动画的元素
+            document.querySelectorAll('.hidden-initially').forEach(el => {
+                observer.observe(el);
+            });
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            createStars();
+            handleNavbarScroll();
+            setupMobileMenu();
+            setupScrollAnimations();
+            
+            // 监听滚动事件
+            window.addEventListener('scroll', handleNavbarScroll);
+        });
+    </script>
+</body>
+</html>
+<!-- 1. 首先在页脚或合适位置添加分享按钮容器 -->
+<div class="fixed bottom-6 right-6 z-40">
+  <button id="share-button" class="bg-primary text-dark w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-primary/90 transition-all duration-300">
+    <i class="fa fa-share-alt" aria-hidden="true"></i>
+  </button>
+  
+  <!-- 分享面板 -->
+  <div id="share-panel" class="hidden absolute bottom-16 right-0 bg-dark/90 backdrop-blur-md rounded-xl p-4 shadow-xl border border-primary/20 w-64">
+    <h4 class="text-light font-medium mb-3 text-center">分享此页面</h4>
+    
+    <!-- 社交媒体分享按钮 -->
+    <div class="grid grid-cols-4 gap-3 mb-4">
+      <a href="javascript:shareTo('weibo')" class="share-icon w-10 h-10 rounded-full bg-[#E6162D]/20 flex items-center justify-center text-[#E6162D] hover:bg-[#E6162D]/30 transition-colors">
+        <i class="fa fa-weibo" aria-hidden="true"></i>
+      </a>
+      <a href="javascript:shareTo('wechat')" class="share-icon w-10 h-10 rounded-full bg-[#07C160]/20 flex items-center justify-center text-[#07C160] hover:bg-[#07C160]/30 transition-colors">
+        <i class="fa fa-weixin" aria-hidden="true"></i>
+      </a>
+      <a href="javascript:shareTo('qq')" class="share-icon w-10 h-10 rounded-full bg-[#12B7F5]/20 flex items-center justify-center text-[#12B7F5] hover:bg-[#12B7F5]/30 transition-colors">
+        <i class="fa fa-qq" aria-hidden="true"></i>
+      </a>
+      <a href="javascript:shareTo('copy')" class="share-icon w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary hover:bg-primary/30 transition-colors">
+        <i class="fa fa-link" aria-hidden="true"></i>
+      </a>
+    </div>
+    
+    <!-- 浏览器原生分享按钮（如果支持） -->
+    <button id="native-share" class="w-full py-2 bg-secondary/20 text-secondary rounded-lg text-sm hover:bg-secondary/30 transition-colors hidden">
+      <i class="fa fa-share-square-o mr-1" aria-hidden="true"></i> 系统分享
+    </button>
+  </div>
+</div>
+
+<!-- 2. 在CSS部分添加样式 -->
+<style>
+  /* 分享按钮动画 */
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  
+  #share-panel {
+    animation: popIn 0.2s ease forwards;
+  }
+  
+  .share-icon i {
+    transition: transform 0.2s ease;
+  }
+  
+  .share-icon:hover i {
+    transform: scale(1.2);
+  }
+  
+  /* 复制成功提示 */
+  .copy-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-dark/90;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 100;
+  }
+  
+  .copy-toast.show {
+    opacity: 1;
+  }
+</style>
+
+<!-- 3. 在JavaScript部分添加分享功能代码 -->
+<script>
+  // 分享面板显示/隐藏控制
+  const shareButton = document.getElementById('share-button');
+  const sharePanel = document.getElementById('share-panel');
+  
+  shareButton.addEventListener('click', () => {
+    sharePanel.classList.toggle('hidden');
+  });
+  
+  // 点击页面其他地方关闭分享面板
+  document.addEventListener('click', (e) => {
+    if (!shareButton.contains(e.target) && !sharePanel.contains(e.target)) {
+      sharePanel.classList.add('hidden');
+    }
+  });
+  
+  // 检查浏览器是否支持原生分享API
+  if (navigator.share) {
+    document.getElementById('native-share').classList.remove('hidden');
+    document.getElementById('native-share').addEventListener('click', () => {
+      navigator.share({
+        title: document.title,
+        text: '来看看月柠的晚间频道，内容很精彩！',
+        url: window.location.href
+      }).catch((error) => console.log('分享失败:', error));
+    });
+  }
+  
+  // 分享功能实现
+  function shareTo(platform) {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent(document.title);
+    let shareUrl = '';
+    
+    switch(platform) {
+      case 'weibo':
+        shareUrl = `https://service.weibo.com/share/share.php?url=${url}&title=${title}`;
+        break;
+      case 'wechat':
+        // 微信不支持直接分享链接，这里提示用户手动分享
+        showToast('请复制链接到微信分享');
+        return;
+      case 'qq':
+        shareUrl = `https://connect.qq.com/widget/shareqq/index.html?url=${url}&title=${title}`;
+        break;
+      case 'copy':
+        // 复制链接到剪贴板
+        navigator.clipboard.writeText(window.location.href)
+          .then(() => {
+            showToast('链接已复制到剪贴板');
+          })
+          .catch(err => {
+            console.error('无法复制: ', err);
+            showToast('复制失败，请手动复制');
+          });
+        return;
+    }
+    
+    // 打开分享窗口
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+    sharePanel.classList.add('hidden');
+  }
+  
+  // 显示提示消息
+  function showToast(message) {
+    // 检查是否已有toast，如有则移除
+    const existingToast = document.querySelector('.copy-toast');
+    if (existingToast) {
+      existingToast.remove();
+    }
+    
+    // 创建新toast
+    const toast = document.createElement('div');
+    toast.className = 'copy-toast bg-dark/90 text-light py-2 px-4 rounded-full shadow-lg';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // 显示toast
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    // 3秒后隐藏
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+</script>
+
